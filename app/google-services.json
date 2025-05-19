@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "123456789000",
-    "project_id": "a5046a3-student-wellness",
-    "storage_bucket": "a5046a3-student-wellness.appspot.com"
+    "project_number": "4649136134",
+    "project_id": "project-5823035682358703954",
+    "storage_bucket": "project-5823035682358703954.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:123456789000:android:abcdef1234567890",
+        "mobilesdk_app_id": "1:4649136134:android:14c7a4d849a98f76185387",
         "android_client_info": {
           "package_name": "com.example.a5046a3"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+          "current_key": "AIzaSyDtJ_ylHqQ_XaQg3lAYIkMxWA8tmUPHVaE"
         }
       ],
       "services": {
@@ -26,4 +26,4 @@
     }
   ],
   "configuration_version": "1"
-} 
+}
