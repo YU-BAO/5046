@@ -1,5 +1,6 @@
 package com.example.a5046a3.ui.screens.auth
 
+import android.content.Intent
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
@@ -26,6 +27,7 @@ import com.example.a5046a3.auth.AuthManager
 import com.example.a5046a3.auth.GoogleSignInManager
 import com.example.a5046a3.navigation.Screen
 import kotlinx.coroutines.launch
+import com.example.a5046a3.ui.screens.auth.GoogleSignInActivity
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -233,14 +235,9 @@ fun LoginScreen(navController: NavController) {
         
         // Google sign in button
         OutlinedButton(
-            onClick = { 
-                // Use Google Sign-In - Since we simplified the implementation in GoogleSignInManager,
-                // this just pretends to login successfully and navigates to home page
-                // TODO: In a real project, should launch GoogleSignInActivity
-                Toast.makeText(context, "Google Sign-In (Mock Implementation)", Toast.LENGTH_SHORT).show()
-                navController.navigate(Screen.Home.route) {
-                    popUpTo(Screen.Login.route) { inclusive = true }
-                }
+            onClick = {
+                val intent = Intent(context, GoogleSignInActivity::class.java)
+                context.startActivity(intent)
             },
             modifier = Modifier.fillMaxWidth(),
             border = ButtonDefaults.outlinedButtonBorder

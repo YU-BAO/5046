@@ -10,10 +10,18 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.tasks.Task
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.tasks.await
+import com.example.a5046a3.R
 
 /**
- * A simplified version of GoogleSignInManager that avoids direct dependency on GoogleSignIn APIs
- * For a complete implementation, please ensure play-services-auth is correctly integrated
+ * Manager class for Google Sign In authentication with Firebase
  */
 class GoogleSignInManager(private val context: Context) {
     
@@ -22,33 +30,50 @@ class GoogleSignInManager(private val context: Context) {
     // Firebase Auth instance
     private val auth: FirebaseAuth = Firebase.auth
     
-    /**
-     * This is a stub method that would normally return a Google Sign-In intent
-     * In a real implementation, this would use GoogleSignIn APIs
-     */
-    fun getSignInIntent(): Intent {
-        // In a real implementation, this would be:
-        // val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-        //     .requestIdToken(context.getString(R.string.default_web_client_id))
-        //     .requestEmail()
-        //     .build()
-        // return GoogleSignIn.getClient(context, gso).signInIntent
+    // Google Sign In client
+    private val googleSignInClient: GoogleSignInClient
+    
+    init {
+        // Configure Google Sign In with Firebase integration
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(context.getString(R.string.default_web_client_id))
+            .requestEmail()
+            .build()
         
-        // Just return a placeholder intent for now
-        return Intent(context, context.javaClass).apply {
-            action = "com.google.android.gms.auth.GOOGLE_SIGN_IN"
-        }
+        googleSignInClient = GoogleSignIn.getClient(context, gso)
     }
     
     /**
-     * Handle the sign-in result from an Activity.result
-     * This is a stub implementation to be completed with actual GoogleSignIn APIs
+     * Get Google Sign In intent for starting the authentication flow
+     */
+    fun getSignInIntent(): Intent {
+        return googleSignInClient.signInIntent
+    }
+    
+    /**
+     * Handle the sign-in result from Google Sign In
      */
     suspend fun handleSignInResult(data: Intent?): Boolean {
-        // In a real implementation, this would handle the result properly
-        // For now, just return fake success for demo purposes
-        val idToken = "demo_token" // This would come from GoogleSignIn result in real implementation
-        return firebaseAuthWithGoogle(idToken)
+        return withContext(Dispatchers.IO) {
+            try {
+                val task = GoogleSignIn.getSignedInAccountFromIntent(data)
+                val account = task.await()
+                Log.d(TAG, "Google sign in succeeded")
+                
+                // Get ID token from Google Sign In account
+                val idToken = account.idToken
+                if (idToken != null) {
+                    // Authenticate with Firebase using Google credentials
+                    firebaseAuthWithGoogle(idToken)
+                } else {
+                    Log.w(TAG, "No ID token received from Google")
+                    false
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Google sign in failed", e)
+                false
+            }
+        }
     }
     
     /**
@@ -56,19 +81,29 @@ class GoogleSignInManager(private val context: Context) {
      */
     private suspend fun firebaseAuthWithGoogle(idToken: String): Boolean {
         return suspendCoroutine { continuation ->
-            val credential = GoogleAuthProvider.getCredential(idToken, null)
-            auth.signInWithCredential(credential)
-                .addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        Log.d(TAG, "signInWithCredential:success")
-                        val user = auth.currentUser
-                        Log.d(TAG, "User: ${user?.displayName}, ${user?.email}")
-                        continuation.resume(true)
-                    } else {
-                        Log.w(TAG, "signInWithCredential:failure", task.exception)
-                        continuation.resume(false)
+            try {
+                // Get credentials from Google ID token
+                val credential = GoogleAuthProvider.getCredential(idToken, null)
+                
+                // Sign in to Firebase with Google credentials
+                auth.signInWithCredential(credential)
+                    .addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            // Sign in success
+                            Log.d(TAG, "signInWithCredential:success")
+                            val user = auth.currentUser
+                            Log.d(TAG, "User: ${user?.displayName}, ${user?.email}")
+                            continuation.resume(true)
+                        } else {
+                            // Sign in failed
+                            Log.w(TAG, "signInWithCredential:failure", task.exception)
+                            continuation.resume(false)
+                        }
                     }
-                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Firebase authentication failed", e)
+                continuation.resume(false)
+            }
         }
     }
     
@@ -76,9 +111,11 @@ class GoogleSignInManager(private val context: Context) {
      * Sign out from Firebase and Google
      */
     fun signOut() {
+        // Sign out from Firebase
         auth.signOut()
-        // In a real implementation, this would also sign out from Google
-        // googleSignInClient.signOut()
+        
+        // Sign out from Google
+        googleSignInClient.signOut()
     }
     
     /**
