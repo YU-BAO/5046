@@ -1,5 +1,6 @@
 package com.example.a5046a3.navigation
 
+import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -50,6 +51,8 @@ import com.example.a5046a3.ui.screens.main.ReportScreen
 fun AppNavigation(navController: NavHostController = rememberNavController()) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+    
+    Log.d("AppNavigation", "Current route: $currentRoute")
     
     // Check if on a main screen where bottom navigation should be displayed
     val showBottomNav = currentRoute in listOf(

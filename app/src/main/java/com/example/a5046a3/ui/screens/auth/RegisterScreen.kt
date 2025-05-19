@@ -1,5 +1,6 @@
 package com.example.a5046a3.ui.screens.auth
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -11,12 +12,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.a5046a3.auth.AuthManager
 import com.example.a5046a3.navigation.Screen
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -26,6 +30,12 @@ fun RegisterScreen(navController: NavController) {
     var confirmPassword by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
+    
+    val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val authManager = remember { AuthManager() }
     
     Scaffold(
         topBar = {
@@ -64,7 +74,8 @@ fun RegisterScreen(navController: NavController) {
                 label = { Text("Email") },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                isError = errorMessage != null
             )
             
             Spacer(modifier = Modifier.height(16.dp))
@@ -78,6 +89,7 @@ fun RegisterScreen(navController: NavController) {
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 modifier = Modifier.fillMaxWidth(),
+                isError = errorMessage != null,
                 trailingIcon = {
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
@@ -99,6 +111,7 @@ fun RegisterScreen(navController: NavController) {
                 visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 modifier = Modifier.fillMaxWidth(),
+                isError = errorMessage != null,
                 trailingIcon = {
                     IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
                         Icon(
@@ -118,25 +131,70 @@ fun RegisterScreen(navController: NavController) {
                     .padding(top = 4.dp)
             )
             
+            if (errorMessage != null) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = errorMessage!!,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+            
             Spacer(modifier = Modifier.height(24.dp))
             
             // Register button
             Button(
                 onClick = {
-                    // Simple validation
-                    if (email.isNotEmpty() && password.isNotEmpty() && password == confirmPassword && password.length >= 6) {
-                        // Navigate to home screen on successful registration
-                        navController.navigate(Screen.Home.route) {
-                            popUpTo(Screen.Login.route) { inclusive = true }
+                    // Reset error
+                    errorMessage = null
+                    
+                    // Form validation
+                    when {
+                        email.isEmpty() -> errorMessage = "Please enter your email"
+                        !isValidEmail(email) -> errorMessage = "Please enter a valid email"
+                        password.isEmpty() -> errorMessage = "Please enter your password"
+                        password.length < 6 -> errorMessage = "Password must be at least 6 characters"
+                        password != confirmPassword -> errorMessage = "Passwords do not match"
+                        !isPasswordValid(password) -> errorMessage = "Password must include both letters and numbers"
+                        else -> {
+                            // Start registration process
+                            isLoading = true
+                            coroutineScope.launch {
+                                val result = authManager.registerWithEmail(email, password)
+                                isLoading = false
+                                
+                                result.fold(
+                                    onSuccess = { 
+                                        Toast.makeText(context, "Registration successful!", Toast.LENGTH_SHORT).show()
+                                        // Navigate to home page after successful registration
+                                        navController.navigate(Screen.Home.route) {
+                                            popUpTo(Screen.Login.route) { inclusive = true }
+                                        }
+                                    },
+                                    onFailure = { e ->
+                                        errorMessage = e.message ?: "Registration failed. Please try again."
+                                    }
+                                )
+                            }
                         }
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF2E3B84) // Darker blue for the button
-                )
+                ),
+                enabled = !isLoading
             ) {
-                Text("Register")
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = Color.White,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text("Register")
+                }
             }
             
             Spacer(modifier = Modifier.height(16.dp))
@@ -151,4 +209,17 @@ fun RegisterScreen(navController: NavController) {
             }
         }
     }
+}
+
+// Check if email format is valid
+private fun isValidEmail(email: String): Boolean {
+    val emailRegex = "[a-zA-Z0-9._-]+@[a-z]+\\.+[a-z]+".toRegex()
+    return email.matches(emailRegex)
+}
+
+// Check if password contains letters and numbers
+private fun isPasswordValid(password: String): Boolean {
+    val containsLetter = password.any { it.isLetter() }
+    val containsDigit = password.any { it.isDigit() }
+    return containsLetter && containsDigit
 } 

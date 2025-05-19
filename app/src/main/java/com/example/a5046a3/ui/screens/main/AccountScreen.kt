@@ -1,5 +1,6 @@
 package com.example.a5046a3.ui.screens.main
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,6 +18,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.Divider
@@ -27,21 +29,29 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.a5046a3.auth.AuthManager
 import com.example.a5046a3.data.models.UserProfile
 import com.example.a5046a3.navigation.Screen
 import com.example.a5046a3.ui.components.PrimaryButton
 import androidx.compose.ui.tooling.preview.Preview
+import kotlinx.coroutines.launch
 
 /**
  * Account screen implementation
@@ -51,14 +61,44 @@ import androidx.compose.ui.tooling.preview.Preview
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AccountScreen(navController: NavController) {
-    val user = remember { 
-        // Mock user data for this example
-        mutableStateOf(UserProfile(
-            id = "123456",
-            name = "Student User",
-            email = "student@example.com",
-            photoUrl = null
-        ))
+    val context = LocalContext.current
+    val authManager = remember { AuthManager() }
+    val coroutineScope = rememberCoroutineScope()
+    var showLogoutConfirmation by remember { mutableStateOf(false) }
+    var showDeleteConfirmation by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(false) }
+
+    // 获取当前用户信息
+    val currentUser = authManager.getCurrentUser()
+    val userProfile = remember {
+        mutableStateOf(
+            if (currentUser != null) {
+                UserProfile(
+                    id = currentUser.uid,
+                    name = currentUser.displayName ?: "Student User",
+                    email = currentUser.email ?: "No email provided",
+                    photoUrl = currentUser.photoUrl?.toString()
+                )
+            } else {
+                // 如果没有登录用户，则提供默认值
+                UserProfile(
+                    id = "guest",
+                    name = "Guest User",
+                    email = "Not logged in",
+                    photoUrl = null
+                )
+            }
+        )
+    }
+
+    // 如果用户未登录，返回登录页面
+    LaunchedEffect(Unit) {
+        if (!authManager.isUserLoggedIn()) {
+            Toast.makeText(context, "Please login to view your account", Toast.LENGTH_SHORT).show()
+            navController.navigate(Screen.Login.route) {
+                popUpTo(Screen.Home.route) { inclusive = true }
+            }
+        }
     }
     
     Scaffold(
@@ -107,14 +147,14 @@ fun AccountScreen(navController: NavController) {
             Spacer(modifier = Modifier.height(16.dp))
             
             Text(
-                text = user.value.name,
+                text = userProfile.value.name,
                 style = MaterialTheme.typography.headlineSmall
             )
             
             Spacer(modifier = Modifier.height(4.dp))
             
             Text(
-                text = user.value.email,
+                text = userProfile.value.email,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -177,27 +217,106 @@ fun AccountScreen(navController: NavController) {
                 }
             }
             
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Delete Account Button
+            TextButton(
+                onClick = { showDeleteConfirmation = true },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "Delete Account",
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+            
             // Push logout button to bottom
             Spacer(modifier = Modifier.weight(1f))
             
             // Logout button
             PrimaryButton(
                 text = "Logout",
-                onClick = {
-                    // Navigate back to login
-                    navController.navigate(Screen.Login.route) {
-                        // Clear the back stack
-                        popUpTo(Screen.Home.route) { inclusive = true }
-                    }
-                },
+                onClick = { showLogoutConfirmation = true },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Filled.ExitToApp,
                         contentDescription = null
                     )
-                }
+                },
+                isLoading = isLoading
             )
         }
+    }
+    
+    // 登出确认对话框
+    if (showLogoutConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showLogoutConfirmation = false },
+            title = { Text("Logout") },
+            text = { Text("Are you sure you want to logout?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showLogoutConfirmation = false
+                        isLoading = true
+                        // 执行登出
+                        authManager.signOut()
+                        // 导航回登录页面
+                        Toast.makeText(context, "Logged out successfully", Toast.LENGTH_SHORT).show()
+                        navController.navigate(Screen.Login.route) {
+                            popUpTo(Screen.Home.route) { inclusive = true }
+                        }
+                    }
+                ) {
+                    Text("Logout")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLogoutConfirmation = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+    
+    // 删除账户确认对话框
+    if (showDeleteConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmation = false },
+            title = { Text("Delete Account") },
+            text = { Text("Are you sure you want to delete your account? This action cannot be undone.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteConfirmation = false
+                        isLoading = true
+                        // 删除账户
+                        coroutineScope.launch {
+                            val result = authManager.deleteAccount()
+                            result.fold(
+                                onSuccess = {
+                                    Toast.makeText(context, "Account deleted successfully", Toast.LENGTH_SHORT).show()
+                                    navController.navigate(Screen.Login.route) {
+                                        popUpTo(Screen.Home.route) { inclusive = true }
+                                    }
+                                },
+                                onFailure = { error ->
+                                    isLoading = false
+                                    Toast.makeText(context, "Failed to delete account: ${error.message}", Toast.LENGTH_LONG).show()
+                                }
+                            )
+                        }
+                    }
+                ) {
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirmation = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
 

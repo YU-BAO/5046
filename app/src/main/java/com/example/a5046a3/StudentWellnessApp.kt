@@ -1,14 +1,41 @@
 package com.example.a5046a3
 
 import android.app.Application
+import android.util.Log
+import com.google.firebase.FirebaseApp
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.FirebaseOptions
 
 /**
- * 应用程序类
+ * Application Main Class - Initialize necessary components at app startup
  */
 class StudentWellnessApp : Application() {
+    companion object {
+        private const val TAG = "StudentWellnessApp"
+    }
     
     override fun onCreate() {
         super.onCreate()
-        // 空实现，仅用于展示UI
+        
+        try {
+            // Initialize Firebase
+            if (FirebaseApp.getApps(this).isEmpty()) {
+                Log.d(TAG, "Initializing Firebase")
+                FirebaseApp.initializeApp(this)
+            } else {
+                Log.d(TAG, "Firebase already initialized")
+            }
+            
+            // Check if Firebase initialization was successful
+            val firebaseApp = FirebaseApp.getInstance()
+            Log.d(TAG, "Firebase instance name: ${firebaseApp.name}")
+            
+            // Check authentication instance
+            val auth = FirebaseAuth.getInstance()
+            Log.d(TAG, "FirebaseAuth instance acquired")
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Firebase initialization failed", e)
+        }
     }
 } 

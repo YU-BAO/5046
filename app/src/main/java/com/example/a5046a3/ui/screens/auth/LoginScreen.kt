@@ -1,5 +1,7 @@
 package com.example.a5046a3.ui.screens.auth
 
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
@@ -11,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -19,16 +22,34 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.a5046a3.R
+import com.example.a5046a3.auth.AuthManager
+import com.example.a5046a3.auth.GoogleSignInManager
 import com.example.a5046a3.navigation.Screen
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(navController: NavController) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var showError by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
     var rememberPassword by remember { mutableStateOf(false) }
     var passwordVisible by remember { mutableStateOf(false) }
+    
+    val context = LocalContext.current
+    val authManager = remember { AuthManager() }
+    val googleSignInManager = remember { GoogleSignInManager(context) }
+    val coroutineScope = rememberCoroutineScope()
+    
+    // Check if user is already logged in, if so, navigate directly to home page
+    LaunchedEffect(Unit) {
+        if (authManager.isUserLoggedIn()) {
+            navController.navigate(Screen.Home.route) {
+                popUpTo(Screen.Login.route) { inclusive = true }
+            }
+        }
+    }
     
     Column(
         modifier = Modifier
@@ -72,7 +93,8 @@ fun LoginScreen(navController: NavController) {
             label = { Text("Email") },
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            isError = errorMessage != null
         )
         
         Spacer(modifier = Modifier.height(16.dp))
@@ -86,6 +108,7 @@ fun LoginScreen(navController: NavController) {
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             modifier = Modifier.fillMaxWidth(),
+            isError = errorMessage != null,
             trailingIcon = {
                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
                     Icon(
@@ -112,38 +135,84 @@ fun LoginScreen(navController: NavController) {
                 text = "Remember password",
                 style = MaterialTheme.typography.bodyMedium
             )
+            
+            Spacer(modifier = Modifier.weight(1f))
+            
+            // Add Forgot Password button
+            TextButton(onClick = {
+                if (email.isNotEmpty()) {
+                    coroutineScope.launch {
+                        try {
+                            authManager.sendPasswordResetEmail(email)
+                            Toast.makeText(context, "Password reset email sent to $email", Toast.LENGTH_LONG).show()
+                        } catch (e: Exception) {
+                            Toast.makeText(context, "Failed to send reset email: ${e.message}", Toast.LENGTH_LONG).show()
+                        }
+                    }
+                } else {
+                    errorMessage = "Please enter your email"
+                }
+            }) {
+                Text("Forgot Password?")
+            }
         }
         
-        // Sample accounts text
-        Text(
-            text = "Test accounts: test@example.com / password123, jackbot@example.com / jackbot123",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.outline,
-            textAlign = TextAlign.Start,
-            modifier = Modifier.fillMaxWidth()
-        )
+        if (errorMessage != null) {
+            Text(
+                text = errorMessage!!,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
         
         Spacer(modifier = Modifier.height(24.dp))
         
         // Login button
         Button(
             onClick = {
-                // 简化登录逻辑，不进行实际验证
-                if (email.isNotEmpty() && password.isNotEmpty()) {
-                    // 导航到主页
-                    navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.Login.route) { inclusive = true }
+                // Reset error message
+                errorMessage = null
+                
+                // Basic validation
+                when {
+                    email.isEmpty() -> errorMessage = "Please enter your email"
+                    password.isEmpty() -> errorMessage = "Please enter your password"
+                    else -> {
+                        isLoading = true
+                        coroutineScope.launch {
+                            val result = authManager.loginWithEmail(email, password)
+                            isLoading = false
+                            result.fold(
+                                onSuccess = {
+                                    Toast.makeText(context, "Login successful", Toast.LENGTH_SHORT).show()
+                                    navController.navigate(Screen.Home.route) {
+                                        popUpTo(Screen.Login.route) { inclusive = true }
+                                    }
+                                },
+                                onFailure = { exception ->
+                                    errorMessage = exception.message ?: "Login failed. Please check your credentials."
+                                }
+                            )
+                        }
                     }
-                } else {
-                    showError = true
                 }
             },
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.primary
-            )
+            ),
+            enabled = !isLoading
         ) {
-            Text("Login")
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    strokeWidth = 2.dp
+                )
+            } else {
+                Text("Login")
+            }
         }
         
         // OR divider
@@ -151,20 +220,24 @@ fun LoginScreen(navController: NavController) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
+            verticalAlignment = Alignment.CenterVertically
         ) {
+            Divider(modifier = Modifier.weight(1f))
             Text(
-                text = "OR",
+                text = " OR ",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.outline
             )
+            Divider(modifier = Modifier.weight(1f))
         }
         
         // Google sign in button
         OutlinedButton(
             onClick = { 
-                // 使用Google登录并导航到主页
+                // Use Google Sign-In - Since we simplified the implementation in GoogleSignInManager,
+                // this just pretends to login successfully and navigates to home page
+                // TODO: In a real project, should launch GoogleSignInActivity
+                Toast.makeText(context, "Google Sign-In (Mock Implementation)", Toast.LENGTH_SHORT).show()
                 navController.navigate(Screen.Home.route) {
                     popUpTo(Screen.Login.route) { inclusive = true }
                 }
@@ -184,20 +257,9 @@ fun LoginScreen(navController: NavController) {
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Continue with Google",
-                    color = Color.Red
+                    text = "Continue with Google"
                 )
             }
-        }
-        
-        // Show error message if needed
-        if (showError) {
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Please enter email and password",
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodySmall
-            )
         }
         
         Spacer(modifier = Modifier.height(16.dp))

@@ -7,12 +7,12 @@ plugins {
 
 android {
     namespace = "com.example.a5046a3"
-    compileSdk = 35
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.example.a5046a3"
         minSdk = 24
-        targetSdk = 35
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
@@ -51,6 +51,9 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-storage")
     implementation("com.google.firebase:firebase-auth-ktx")
+    // 添加Firebase崩溃分析
+    implementation("com.google.firebase:firebase-crashlytics")
+    
     // Google Sign-In
     implementation("com.google.android.gms:play-services-auth:20.7.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
