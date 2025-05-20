@@ -9,7 +9,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,11 +19,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import java.text.SimpleDateFormat
-import java.util.*
+import com.example.a5046a3.data.models.ExerciseLevel
+import com.example.a5046a3.data.models.Mood
+import com.example.a5046a3.ui.viewmodels.WellnessViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.*
 
 /**
  * Data entry screen for logging wellness information
@@ -33,28 +36,34 @@ import kotlinx.coroutines.launch
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DataEntryScreen(navController: NavController) {
-    // State for form values
-    var selectedDate by remember { mutableStateOf(SimpleDateFormat("EEEE, MMM d, yyyy", Locale.getDefault()).format(Date())) }
-    var selectedMood by remember { mutableStateOf("Neutral") }
+fun DataEntryScreen(
+    navController: NavController,
+    wellnessViewModel: WellnessViewModel = viewModel()
+) {
+    // 表单状态
+    var selectedDate by remember { mutableStateOf(Date()) }
+    var selectedMood by remember { mutableStateOf(Mood.NEUTRAL) }
     var sleepHours by remember { mutableStateOf(7f) }
-    var selectedExerciseLevel by remember { mutableStateOf("None") }
+    var selectedExerciseLevel by remember { mutableStateOf(ExerciseLevel.NONE) }
     var notes by remember { mutableStateOf("") }
     
-    // State for dropdown menus
+    // 下拉菜单状态
     var expandedMoodDropdown by remember { mutableStateOf(false) }
     var expandedExerciseDropdown by remember { mutableStateOf(false) }
     
-    // State for success dialog
+    // 成功对话框状态
     var showSuccessDialog by remember { mutableStateOf(false) }
     
-    // Coroutine scope for delay
+    // 协程作用域
     val coroutineScope = rememberCoroutineScope()
     
-    // Options for dropdowns
-    val moodOptions = listOf("Very Happy", "Happy", "Neutral", "Sad", "Very Sad")
-    val exerciseOptions = listOf("None", "Light", "Moderate", "Intense", "Very Intense")
+    // 获取当前用户ID（简化版本，实际应从AuthManager获取）
+    val userId = "current_user"
     
+    // 日期格式化
+    val dateFormatter = SimpleDateFormat("EEEE, MMM d, yyyy", Locale.getDefault())
+    val formattedDate = dateFormatter.format(selectedDate)
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -108,7 +117,7 @@ fun DataEntryScreen(navController: NavController) {
                 )
                 
                 OutlinedTextField(
-                    value = selectedDate,
+                    value = formattedDate,
                     onValueChange = { /* Date picker would handle this */ },
                     readOnly = true,
                     trailingIcon = {
@@ -134,7 +143,7 @@ fun DataEntryScreen(navController: NavController) {
                     onExpandedChange = { expandedMoodDropdown = it }
                 ) {
                     OutlinedTextField(
-                        value = "😐 $selectedMood",
+                        value = "${selectedMood.emoji} ${selectedMood.label}",
                         onValueChange = {},
                         readOnly = true,
                         trailingIcon = {
@@ -149,19 +158,10 @@ fun DataEntryScreen(navController: NavController) {
                         expanded = expandedMoodDropdown,
                         onDismissRequest = { expandedMoodDropdown = false }
                     ) {
-                        moodOptions.forEach { option ->
+                        Mood.values().forEach { option ->
                             DropdownMenuItem(
                                 text = { 
-                                    Text(
-                                        text = when (option) {
-                                            "Very Happy" -> "😄 Very Happy"
-                                            "Happy" -> "🙂 Happy"
-                                            "Neutral" -> "😐 Neutral"
-                                            "Sad" -> "🙁 Sad"
-                                            "Very Sad" -> "😢 Very Sad"
-                                            else -> "😐 Neutral"
-                                        }
-                                    ) 
+                                    Text("${option.emoji} ${option.label}")
                                 },
                                 onClick = {
                                     selectedMood = option
@@ -210,7 +210,7 @@ fun DataEntryScreen(navController: NavController) {
                     onExpandedChange = { expandedExerciseDropdown = it }
                 ) {
                     OutlinedTextField(
-                        value = selectedExerciseLevel,
+                        value = selectedExerciseLevel.label,
                         onValueChange = {},
                         readOnly = true,
                         trailingIcon = {
@@ -225,9 +225,9 @@ fun DataEntryScreen(navController: NavController) {
                         expanded = expandedExerciseDropdown,
                         onDismissRequest = { expandedExerciseDropdown = false }
                     ) {
-                        exerciseOptions.forEach { option ->
+                        ExerciseLevel.values().forEach { option ->
                             DropdownMenuItem(
-                                text = { Text(option) },
+                                text = { Text(option.label) },
                                 onClick = {
                                     selectedExerciseLevel = option
                                     expandedExerciseDropdown = false
@@ -254,12 +254,22 @@ fun DataEntryScreen(navController: NavController) {
                 // Save button
                 Button(
                     onClick = {
-                        // Show success dialog
+                        // 保存到Room数据库
+                        wellnessViewModel.addEntry(
+                            userId = userId,
+                            date = selectedDate,
+                            mood = selectedMood,
+                            sleepHours = sleepHours,
+                            exerciseLevel = selectedExerciseLevel,
+                            notes = notes
+                        )
+                        
+                        // 显示成功对话框
                         showSuccessDialog = true
                         
-                        // Automatically navigate back after delay
+                        // 自动返回上一页
                         coroutineScope.launch {
-                            delay(2000) // Wait for 2 seconds
+                            delay(2000) // 等待2秒
                             showSuccessDialog = false
                             navController.popBackStack()
                         }

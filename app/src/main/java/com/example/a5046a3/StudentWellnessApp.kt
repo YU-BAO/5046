@@ -2,6 +2,7 @@ package com.example.a5046a3
 
 import android.app.Application
 import android.util.Log
+import com.example.a5046a3.data.database.AppDatabase
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.FirebaseOptions
@@ -37,5 +38,8 @@ class StudentWellnessApp : Application() {
         } catch (e: Exception) {
             Log.e(TAG, "Firebase initialization failed", e)
         }
+        
+        // 初始化数据库
+        AppDatabase.getDatabase(this)
     }
 } 

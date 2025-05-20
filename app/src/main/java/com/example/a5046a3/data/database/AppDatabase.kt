@@ -5,53 +5,32 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import com.example.a5046a3.data.database.converters.DateConverter
-import com.example.a5046a3.data.database.dao.ExerciseDao
-import com.example.a5046a3.data.database.dao.WellnessDao
-import com.example.a5046a3.data.database.entity.ExerciseEntry
-import com.example.a5046a3.data.database.entity.WellnessEntry
+import com.example.a5046a3.data.models.Converters
+import com.example.a5046a3.data.models.WellnessEntryDao
+import com.example.a5046a3.data.models.WellnessEntryEntity
 
 /**
- * Main database for the application, using Room
+ * Room Database class: Defines database configuration using singleton pattern
  */
-@Database(
-    entities = [
-        WellnessEntry::class,
-        ExerciseEntry::class
-    ],
-    version = 1,
-    exportSchema = false
-)
-@TypeConverters(DateConverter::class)
+@Database(entities = [WellnessEntryEntity::class], version = 1, exportSchema = false)
+@TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
-    
-    /**
-     * DAO for accessing wellness entries
-     */
-    abstract fun wellnessDao(): WellnessDao
-    
-    /**
-     * DAO for accessing exercise entries
-     */
-    abstract fun exerciseDao(): ExerciseDao
-    
+
+    abstract fun wellnessEntryDao(): WellnessEntryDao
+
     companion object {
         @Volatile
         private var INSTANCE: AppDatabase? = null
-        
-        /**
-         * Get database instance, creating it if necessary
-         */
-        fun getInstance(context: Context): AppDatabase {
+
+        fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
                     "wellness_database"
                 )
-                    .fallbackToDestructiveMigration()
-                    .build()
-                
+                .fallbackToDestructiveMigration()
+                .build()
                 INSTANCE = instance
                 instance
             }

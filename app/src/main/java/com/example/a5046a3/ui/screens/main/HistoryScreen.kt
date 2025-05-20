@@ -29,6 +29,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,60 +39,34 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.example.a5046a3.data.models.ExerciseLevel
 import com.example.a5046a3.data.models.Mood
 import com.example.a5046a3.data.models.WellnessEntry
 import com.example.a5046a3.navigation.Screen
-import com.example.a5046a3.ui.components.CommonTopAppBar
-import com.example.a5046a3.ui.components.WellnessCard
+import com.example.a5046a3.ui.components.WellnessCardContent
+import com.example.a5046a3.ui.viewmodels.WellnessViewModel
 import java.text.SimpleDateFormat
-import java.util.Locale
 import java.util.Date
+import java.util.Locale
 import java.util.UUID
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.navigation.compose.rememberNavController
-import com.example.a5046a3.data.models.ExerciseLevel
 
 /**
- * History screen implementation to display all wellness entries
+ * History screen implementation to display all wellness entries from Room database
  * 
  * @param navController Navigation controller for navigating between screens
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HistoryScreen(navController: NavController) {
-    // Mock data for demonstration
-    val entries = remember {
-        listOf(
-            WellnessEntry(
-                id = UUID.randomUUID().toString(),
-                userId = "user123",
-                date = Date(),
-                mood = Mood.HAPPY,
-                sleepHours = 7.5f,
-                exerciseLevel = ExerciseLevel.MODERATE,
-                notes = "Had a good day today. Went for a walk in the park and had a healthy lunch."
-            ),
-            WellnessEntry(
-                id = UUID.randomUUID().toString(),
-                userId = "user123",
-                date = Date(System.currentTimeMillis() - 24 * 60 * 60 * 1000), // Yesterday
-                mood = Mood.NEUTRAL,
-                sleepHours = 6.0f,
-                exerciseLevel = ExerciseLevel.LIGHT,
-                notes = "Busy day with classes. Didn't get much exercise."
-            ),
-            WellnessEntry(
-                id = UUID.randomUUID().toString(),
-                userId = "user123",
-                date = Date(System.currentTimeMillis() - 2 * 24 * 60 * 60 * 1000), // Day before yesterday
-                mood = Mood.VERY_HAPPY,
-                sleepHours = 8.0f,
-                exerciseLevel = ExerciseLevel.INTENSE,
-                notes = "Great workout today! Feeling energized."
-            )
-        )
-    }
+fun HistoryScreen(
+    navController: NavController,
+    wellnessViewModel: WellnessViewModel = viewModel()
+) {
+    // 从ViewModel获取所有记录
+    val entries by wellnessViewModel.allEntries.collectAsState()
     
     Scaffold(
         topBar = {
@@ -125,7 +101,7 @@ fun HistoryScreen(navController: NavController) {
         }
     ) { paddingValues ->
         if (entries.isEmpty()) {
-            // Show empty state
+            // 显示空状态
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -151,7 +127,7 @@ fun HistoryScreen(navController: NavController) {
                 }
             }
         } else {
-            // Display entries in a LazyColumn
+            // 使用LazyColumn显示记录
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -183,7 +159,7 @@ fun EntryItem(entry: WellnessEntry) {
         )
     }
     
-    WellnessCard {
+    WellnessCardContent {
         Column {
             // Entry date
             val dateFormatter = SimpleDateFormat("EEE, MMM d, yyyy", Locale.getDefault())

@@ -1,88 +1,72 @@
 package com.example.a5046a3.data.repository
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.map
-import com.example.a5046a3.data.database.dao.WellnessEntryDao
-import com.example.a5046a3.data.database.entity.WellnessEntryEntity
 import com.example.a5046a3.data.models.WellnessEntry
+import com.example.a5046a3.data.models.WellnessEntryDao
+import com.example.a5046a3.data.models.toEntity
+import com.example.a5046a3.data.models.toWellnessEntry
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.util.Calendar
 import java.util.Date
 
 /**
- * Repository for managing wellness entry data using Room database
+ * Wellness Data Repository: Manages wellness records using Room database
  */
-class WellnessRepository(private val wellnessEntryDao: WellnessEntryDao) {
+class WellnessRepository(private val wellnessDao: WellnessEntryDao) {
     
     /**
-     * Get all wellness entries as LiveData
+     * Get all records
      */
-    val allEntries: LiveData<List<WellnessEntry>> = wellnessEntryDao.getAllEntries().map { entities ->
-        entities.map { it.toDomainModel() }
-    }
-    
-    /**
-     * Get entries from the past week as LiveData
-     */
-    val pastWeekEntries: LiveData<List<WellnessEntry>> = wellnessEntryDao.getEntriesInDateRange(
-        getOneWeekAgoDate(), 
-        Date()
-    ).map { entities ->
-        entities.map { it.toDomainModel() }
-    }
-    
-    /**
-     * Insert a new wellness entry
-     */
-    suspend fun insert(entry: WellnessEntry) {
-        withContext(Dispatchers.IO) {
-            wellnessEntryDao.insert(WellnessEntryEntity.fromDomainModel(entry))
+    fun getAllEntries(): Flow<List<WellnessEntry>> {
+        return wellnessDao.getAllEntries().map { entities ->
+            entities.map { it.toWellnessEntry() }
         }
     }
     
     /**
-     * Update an existing wellness entry
+     * Get records by user ID
      */
-    suspend fun update(entry: WellnessEntry) {
-        withContext(Dispatchers.IO) {
-            wellnessEntryDao.update(WellnessEntryEntity.fromDomainModel(entry))
+    fun getEntriesByUser(userId: String): Flow<List<WellnessEntry>> {
+        return wellnessDao.getEntriesByUser(userId).map { entities ->
+            entities.map { it.toWellnessEntry() }
         }
     }
     
     /**
-     * Delete a wellness entry
+     * Insert new record
      */
-    suspend fun delete(entry: WellnessEntry) {
-        withContext(Dispatchers.IO) {
-            wellnessEntryDao.delete(WellnessEntryEntity.fromDomainModel(entry))
+    suspend fun insertEntry(entry: WellnessEntry): Long {
+        return withContext(Dispatchers.IO) {
+            wellnessDao.insertEntry(entry.toEntity())
         }
     }
     
     /**
-     * Get a wellness entry by ID
+     * Update record
+     */
+    suspend fun updateEntry(entry: WellnessEntry): Int {
+        return withContext(Dispatchers.IO) {
+            wellnessDao.updateEntry(entry.toEntity())
+        }
+    }
+    
+    /**
+     * Delete record
+     */
+    suspend fun deleteEntry(entry: WellnessEntry): Int {
+        return withContext(Dispatchers.IO) {
+            wellnessDao.deleteEntry(entry.toEntity())
+        }
+    }
+    
+    /**
+     * Get record by ID
      */
     suspend fun getEntryById(id: String): WellnessEntry? {
         return withContext(Dispatchers.IO) {
-            wellnessEntryDao.getEntryById(id)?.toDomainModel()
-        }
-    }
-    
-    /**
-     * Get the latest wellness entry
-     */
-    suspend fun getLatestEntry(): WellnessEntry? {
-        return withContext(Dispatchers.IO) {
-            wellnessEntryDao.getLatestEntry()?.toDomainModel()
-        }
-    }
-    
-    /**
-     * Delete all wellness entries
-     */
-    suspend fun deleteAllEntries() {
-        withContext(Dispatchers.IO) {
-            wellnessEntryDao.deleteAllEntries()
+            wellnessDao.getEntryById(id)?.toWellnessEntry()
         }
     }
     
