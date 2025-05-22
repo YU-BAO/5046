@@ -53,6 +53,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.UUID
+import com.example.a5046a3.StudentWellnessApp
 
 /**
  * History screen implementation to display all wellness entries from Room database
@@ -65,8 +66,9 @@ fun HistoryScreen(
     navController: NavController,
     wellnessViewModel: WellnessViewModel = viewModel()
 ) {
-    // 从ViewModel获取所有记录
-    val entries by wellnessViewModel.allEntries.collectAsState()
+    val userId = StudentWellnessApp.userManager.getUserId()
+    val entryFlow = if (userId != null) wellnessViewModel.getEntriesByUser(userId) else wellnessViewModel.getEntriesByUser("__NO__")
+    val entries by entryFlow.collectAsState()
     
     Scaffold(
         topBar = {

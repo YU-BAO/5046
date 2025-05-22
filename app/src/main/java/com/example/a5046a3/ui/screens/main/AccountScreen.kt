@@ -52,6 +52,7 @@ import com.example.a5046a3.navigation.Screen
 import com.example.a5046a3.ui.components.PrimaryButton
 import androidx.compose.ui.tooling.preview.Preview
 import kotlinx.coroutines.launch
+import com.example.a5046a3.StudentWellnessApp
 
 /**
  * Account screen implementation
@@ -93,7 +94,7 @@ fun AccountScreen(navController: NavController) {
 
     // 如果用户未登录，返回登录页面
     LaunchedEffect(Unit) {
-        if (!authManager.isUserLoggedIn()) {
+        if (!StudentWellnessApp.userManager.isLoggedIn() && !authManager.isUserLoggedIn()) {
             Toast.makeText(context, "Please login to view your account", Toast.LENGTH_SHORT).show()
             navController.navigate(Screen.Login.route) {
                 popUpTo(Screen.Home.route) { inclusive = true }
@@ -261,6 +262,7 @@ fun AccountScreen(navController: NavController) {
                         isLoading = true
                         // 执行登出
                         authManager.signOut()
+                        StudentWellnessApp.userManager.clearUserId()
                         // 导航回登录页面
                         Toast.makeText(context, "Logged out successfully", Toast.LENGTH_SHORT).show()
                         navController.navigate(Screen.Login.route) {
@@ -296,6 +298,7 @@ fun AccountScreen(navController: NavController) {
                             result.fold(
                                 onSuccess = {
                                     Toast.makeText(context, "Account deleted successfully", Toast.LENGTH_SHORT).show()
+                                    StudentWellnessApp.userManager.clearUserId()
                                     navController.navigate(Screen.Login.route) {
                                         popUpTo(Screen.Home.route) { inclusive = true }
                                     }

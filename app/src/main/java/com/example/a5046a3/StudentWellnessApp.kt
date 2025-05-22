@@ -6,6 +6,7 @@ import com.example.a5046a3.data.database.AppDatabase
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.FirebaseOptions
+import com.example.a5046a3.data.manager.UserManager
 
 /**
  * Application Main Class - Initialize necessary components at app startup
@@ -13,6 +14,8 @@ import com.google.firebase.FirebaseOptions
 class StudentWellnessApp : Application() {
     companion object {
         private const val TAG = "StudentWellnessApp"
+        lateinit var userManager: UserManager
+            private set
     }
     
     override fun onCreate() {
@@ -41,5 +44,8 @@ class StudentWellnessApp : Application() {
         
         // 初始化数据库
         AppDatabase.getDatabase(this)
+
+        // init UserManager
+        userManager = UserManager.getInstance(this)
     }
 } 

@@ -28,6 +28,7 @@ import com.example.a5046a3.auth.GoogleSignInManager
 import com.example.a5046a3.navigation.Screen
 import kotlinx.coroutines.launch
 import com.example.a5046a3.ui.screens.auth.GoogleSignInActivity
+import com.example.a5046a3.StudentWellnessApp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,10 +44,11 @@ fun LoginScreen(navController: NavController) {
     val authManager = remember { AuthManager() }
     val googleSignInManager = remember { GoogleSignInManager(context) }
     val coroutineScope = rememberCoroutineScope()
+    val userManager = StudentWellnessApp.userManager
     
     // Check if user is already logged in, if so, navigate directly to home page
     LaunchedEffect(Unit) {
-        if (authManager.isUserLoggedIn()) {
+        if (authManager.isUserLoggedIn() || userManager.isLoggedIn()) {
             navController.navigate(Screen.Home.route) {
                 popUpTo(Screen.Login.route) { inclusive = true }
             }
@@ -186,7 +188,9 @@ fun LoginScreen(navController: NavController) {
                             val result = authManager.loginWithEmail(email, password)
                             isLoading = false
                             result.fold(
-                                onSuccess = {
+                                onSuccess = { firebaseUser ->
+                                    userManager.saveUserId(firebaseUser.uid)
+                                    Log.d("LoginScreen", "User ID saved: ${firebaseUser.uid}")
                                     Toast.makeText(context, "Login successful", Toast.LENGTH_SHORT).show()
                                     navController.navigate(Screen.Home.route) {
                                         popUpTo(Screen.Login.route) { inclusive = true }

@@ -28,6 +28,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
+import com.example.a5046a3.StudentWellnessApp
 
 /**
  * Data entry screen for logging wellness information
@@ -58,7 +59,7 @@ fun DataEntryScreen(
     val coroutineScope = rememberCoroutineScope()
     
     // 获取当前用户ID（简化版本，实际应从AuthManager获取）
-    val userId = "current_user"
+    val userId = StudentWellnessApp.userManager.getUserId() ?: ""
     
     // 日期格式化
     val dateFormatter = SimpleDateFormat("EEEE, MMM d, yyyy", Locale.getDefault())
