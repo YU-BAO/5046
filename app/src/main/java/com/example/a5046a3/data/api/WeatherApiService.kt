@@ -26,4 +26,4 @@ interface WeatherApiService {
         @Query("units") units: String = "metric",
         @Query("appid") appid: String
     ): Response<WeatherResponse>
-} 
+}
