@@ -24,10 +24,13 @@ import com.example.a5046a3.navigation.Screen
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.*
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.a5046a3.ui.screens.main.HomeViewModel
+
 
 /**
  * Home screen implementation
- * 
+ *
  * @param navController Navigation controller for navigating between screens
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -38,7 +41,11 @@ fun HomeScreen(navController: NavController) {
         val formatter = DateTimeFormatter.ofPattern("EEEE, MMM d", Locale.ENGLISH)
         LocalDate.now().format(formatter)
     }
-    
+    val homeViewModel: HomeViewModel = viewModel()
+    LaunchedEffect(Unit) {
+        homeViewModel.fetchWeather()
+    }
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -75,15 +82,17 @@ fun HomeScreen(navController: NavController) {
                 ),
                 modifier = Modifier.padding(top = 16.dp)
             )
-            
+
             Text(
                 text = currentDate,
                 style = MaterialTheme.typography.bodyLarge,
                 color = Color.Gray
             )
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
+            val weatherState = homeViewModel.weather.collectAsState().value
+
             // Weather Card
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -106,32 +115,32 @@ fun HomeScreen(navController: NavController) {
                         modifier = Modifier.size(48.dp),
                         tint = Color(0xFF3F51B5)
                     )
-                    
+
                     Spacer(modifier = Modifier.width(16.dp))
-                    
+
                     Column {
                         Text(
                             text = "Today's Weather",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
-                        
+
                         Text(
-                            text = "22.5°C, Partly Cloudy",
+                            text = weatherState?.main?.temp?.let { "$it°C" } ?: "Loading...",
                             style = MaterialTheme.typography.bodyLarge
                         )
-                        
+
                         Text(
-                            text = "Humidity: 65%, Wind: 10.0 km/h",
+                            text = "Humidity: ${weatherState?.main?.humidity ?: "--"}%, Wind: ${weatherState?.wind?.speed ?: "--"} km/h",
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color.Gray
                         )
                     }
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             // Wellness Summary Card
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -152,9 +161,9 @@ fun HomeScreen(navController: NavController) {
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
-                    
+
                     Spacer(modifier = Modifier.height(12.dp))
-                    
+
                     // Mood row
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -165,7 +174,7 @@ fun HomeScreen(navController: NavController) {
                             text = "Mood",
                             style = MaterialTheme.typography.bodyLarge
                         )
-                        
+
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 imageVector = Icons.Filled.Face,
@@ -179,9 +188,9 @@ fun HomeScreen(navController: NavController) {
                             )
                         }
                     }
-                    
+
                     Spacer(modifier = Modifier.height(8.dp))
-                    
+
                     // Sleep row
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -192,15 +201,15 @@ fun HomeScreen(navController: NavController) {
                             text = "Sleep",
                             style = MaterialTheme.typography.bodyLarge
                         )
-                        
+
                         Text(
                             text = "5.0527426 hours",
                             style = MaterialTheme.typography.bodyLarge
                         )
                     }
-                    
+
                     Spacer(modifier = Modifier.height(8.dp))
-                    
+
                     // Exercise row
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -211,7 +220,7 @@ fun HomeScreen(navController: NavController) {
                             text = "Exercise",
                             style = MaterialTheme.typography.bodyLarge
                         )
-                        
+
                         Text(
                             text = "Intense",
                             style = MaterialTheme.typography.bodyLarge
@@ -219,9 +228,9 @@ fun HomeScreen(navController: NavController) {
                     }
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             // Quick Access Card
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -245,14 +254,14 @@ fun HomeScreen(navController: NavController) {
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
-                        
+
                         Text(
                             text = "Access all app features in one place",
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color.Gray
                         )
                     }
-                    
+
                     Button(
                         onClick = { navController.navigate(Screen.QuickAccess.route) },
                         colors = ButtonDefaults.buttonColors(
@@ -269,9 +278,9 @@ fun HomeScreen(navController: NavController) {
                     }
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             // Action Buttons
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -288,9 +297,9 @@ fun HomeScreen(navController: NavController) {
                     Spacer(modifier = Modifier.width(4.dp))
                     Text("New Entry")
                 }
-                
+
                 Spacer(modifier = Modifier.width(16.dp))
-                
+
                 Button(
                     onClick = { navController.navigate(Screen.History.route) },
                     modifier = Modifier.weight(1f),
@@ -303,7 +312,7 @@ fun HomeScreen(navController: NavController) {
                     Text("View All")
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(80.dp)) // Extra space at bottom for FAB
         }
     }
@@ -335,17 +344,17 @@ fun ActionCard(
                 modifier = Modifier.size(40.dp),
                 tint = MaterialTheme.colorScheme.primary
             )
-            
+
             Spacer(modifier = Modifier.width(16.dp))
-            
+
             Column {
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleLarge
                 )
-                
+
                 Spacer(modifier = Modifier.height(4.dp))
-                
+
                 Text(
                     text = description,
                     style = MaterialTheme.typography.bodyMedium
@@ -381,17 +390,17 @@ fun FeatureCard(
                 modifier = Modifier.size(40.dp),
                 tint = MaterialTheme.colorScheme.primary
             )
-            
+
             Spacer(modifier = Modifier.width(16.dp))
-            
+
             Column {
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleLarge
                 )
-                
+
                 Spacer(modifier = Modifier.height(4.dp))
-                
+
                 Text(
                     text = description,
                     style = MaterialTheme.typography.bodyMedium
@@ -399,4 +408,4 @@ fun FeatureCard(
             }
         }
     }
-} 
+}
