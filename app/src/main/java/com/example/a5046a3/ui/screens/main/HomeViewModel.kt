@@ -24,12 +24,13 @@ class HomeViewModel : ViewModel() {
                     appid = BuildConfig.OPENWEATHER_API_KEY
                 )
                 if (response.isSuccessful) {
+                    Log.d("WeatherDebug", "Success: ${response.body()}")
                     _weather.value = response.body()
                 } else {
-                    Log.e("HomeViewModel", "Weather fetch failed: ${response.code()}")
+                    Log.e("WeatherDebug", "Error: ${response.code()} ${response.message()}")
                 }
             } catch (e: Exception) {
-                Log.e("HomeViewModel", "Exception while fetching weather", e)
+                Log.e("WeatherDebug", "Exception: ${e.message}")
             }
         }
     }
