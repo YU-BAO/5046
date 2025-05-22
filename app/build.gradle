@@ -29,7 +29,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
         debug {
-            buildConfigField "String", "API_KEY", "\"your_api_key_here\""
+            buildConfigField "String", "OPENWEATHER_API_KEY", "\"0bd33a10ea4dd1d882388ece9f881e91\""
         }
     }
     
@@ -92,16 +92,16 @@ dependencies {
     implementation platform('com.google.firebase:firebase-bom:32.2.0')
     implementation 'com.google.firebase:firebase-auth-ktx'
     implementation 'com.google.firebase:firebase-firestore-ktx'
-    
+
     // Work Manager
     implementation 'androidx.work:work-runtime-ktx:2.8.1'
-    
+
     // Gson for JSON serialization
     implementation 'com.google.code.gson:gson:2.10.1'
-    
+
     // Google Sign-In
     implementation 'com.google.android.gms:play-services-auth:20.7.0'
-    
+
     // Test dependencies
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
@@ -110,4 +110,4 @@ dependencies {
     androidTestImplementation 'androidx.compose.ui:ui-test-junit4'
     debugImplementation 'androidx.compose.ui:ui-tooling'
     debugImplementation 'androidx.compose.ui:ui-test-manifest'
-} 
+}
