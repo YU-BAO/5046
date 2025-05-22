@@ -13,7 +13,6 @@ import java.util.concurrent.TimeUnit
 object RetrofitInstance {
     
     private const val WEATHER_BASE_URL = "https://api.openweathermap.org/data/2.5/"
-    private const val API_KEY = "0bd33a10ea4dd1d882388ece9f881e91"
     
     /**
      * HTTP client with logging and timeouts
