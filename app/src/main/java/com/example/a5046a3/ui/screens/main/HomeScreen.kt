@@ -26,7 +26,11 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.a5046a3.ui.screens.main.HomeViewModel
-
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import com.example.a5046a3.worker.DailyReminderWorker
+import java.util.concurrent.TimeUnit
+import androidx.compose.ui.platform.LocalContext
 
 /**
  * Home screen implementation
@@ -36,11 +40,10 @@ import com.example.a5046a3.ui.screens.main.HomeViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavController) {
-    val currentDate = remember {
-        LocalDate.now()
-        val formatter = DateTimeFormatter.ofPattern("EEEE, MMM d", Locale.ENGLISH)
-        LocalDate.now().format(formatter)
-    }
+    val context = LocalContext.current // ✅ 修复：提前获取 context
+    val formatter = DateTimeFormatter.ofPattern("EEEE, MMM d", Locale.ENGLISH)
+    val currentDate = LocalDate.now().format(formatter) // ✅ 修复：避免 remember 中使用无效返回值
+
     val homeViewModel: HomeViewModel = viewModel()
     LaunchedEffect(Unit) {
         homeViewModel.fetchWeather()
@@ -301,111 +304,22 @@ fun HomeScreen(navController: NavController) {
                 Spacer(modifier = Modifier.width(16.dp))
 
                 Button(
-                    onClick = { navController.navigate(Screen.History.route) },
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF607D8B)
-                    )
+                    onClick = {
+                        val workRequest = OneTimeWorkRequestBuilder<DailyReminderWorker>()
+                            .setInitialDelay(0, TimeUnit.SECONDS)
+                            .build()
+                        WorkManager.getInstance(context).enqueue(workRequest) // ✅ 修复：避免在 onClick 中调用 LocalContext.current
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF009688))
                 ) {
-                    Icon(Icons.Filled.List, contentDescription = null)
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("View All")
+                    Icon(Icons.Filled.Notifications, contentDescription = "Test Notification")
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Send Test Notification")
                 }
             }
 
             Spacer(modifier = Modifier.height(80.dp)) // Extra space at bottom for FAB
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ActionCard(
-    title: String,
-    description: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 100.dp),
-        onClick = onClick
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(40.dp),
-                tint = MaterialTheme.colorScheme.primary
-            )
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Column {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleLarge
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun FeatureCard(
-    title: String,
-    description: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 100.dp),
-        onClick = onClick
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(40.dp),
-                tint = MaterialTheme.colorScheme.primary
-            )
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Column {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleLarge
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
         }
     }
 }
