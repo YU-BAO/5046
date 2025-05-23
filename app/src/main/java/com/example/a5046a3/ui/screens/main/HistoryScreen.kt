@@ -103,7 +103,7 @@ fun HistoryScreen(
         }
     ) { paddingValues ->
         if (entries.isEmpty()) {
-            // 显示空状态
+            // Show empty state
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -129,7 +129,7 @@ fun HistoryScreen(
                 }
             }
         } else {
-            // 使用LazyColumn显示记录
+            // Display records using LazyColumn
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()

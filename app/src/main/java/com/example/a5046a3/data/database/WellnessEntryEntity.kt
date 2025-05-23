@@ -8,7 +8,7 @@ import com.example.a5046a3.data.models.Mood
 import java.util.Date
 
 /**
- * 数据库实体类：定义wellness记录在数据库中的存储结构
+ * Database entity class that defines the storage structure of wellness records
  */
 @Entity(tableName = "wellness_entries")
 @TypeConverters(Converters::class)

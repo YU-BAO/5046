@@ -42,7 +42,7 @@ class StudentWellnessApp : Application() {
             Log.e(TAG, "Firebase initialization failed", e)
         }
         
-        // 初始化数据库
+        // Initialize database
         AppDatabase.getDatabase(this)
 
         // init UserManager

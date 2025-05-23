@@ -3,7 +3,7 @@ package com.example.a5046a3.data.models
 import java.util.Date
 
 /**
- * 用户情绪枚举
+ * Enumeration of user mood values
  */
 enum class Mood(val label: String, val emoji: String) {
     VERY_SAD("Very Sad", "😢"),
@@ -14,7 +14,7 @@ enum class Mood(val label: String, val emoji: String) {
 }
 
 /**
- * 用户运动等级枚举
+ * Enumeration of user exercise levels
  */
 enum class ExerciseLevel(val label: String) {
     NONE("No Exercise"),
@@ -24,7 +24,7 @@ enum class ExerciseLevel(val label: String) {
 }
 
 /**
- * 用户健康记录数据模型
+ * Data model for a wellness entry
  */
 data class WellnessEntry(
     val id: String,
@@ -37,7 +37,7 @@ data class WellnessEntry(
 )
 
 /**
- * 用户数据模型
+ * User data model
  */
 data class User(
     val id: String,

@@ -55,7 +55,7 @@ class DailyReminderWorker(
     private fun showNotification(title: String, message: String) {
         val channelId = "weather_channel"
 
-        // Android 8.0+ 必须设置通知渠道
+        // Android 8.0+ requires a notification channel
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 channelId,
@@ -68,7 +68,7 @@ class DailyReminderWorker(
         }
 
         val builder = NotificationCompat.Builder(context, channelId)
-            .setSmallIcon(R.drawable.ic_notification) // 请确保你有这个图标
+            .setSmallIcon(R.drawable.ic_notification) // Ensure that this icon exists
             .setContentTitle(title)
             .setContentText(message)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)

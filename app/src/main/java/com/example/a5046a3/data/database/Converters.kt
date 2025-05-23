@@ -6,11 +6,11 @@ import com.example.a5046a3.data.models.Mood
 import java.util.Date
 
 /**
- * Room数据库类型转换器
- * 用于将复杂类型（如Date、Mood、ExerciseLevel）转换为基本类型以便Room存储
+ * Room database type converters
+ * Converts complex types (such as Date, Mood, ExerciseLevel) into primitives for Room persistence
  */
 class Converters {
-    // Date转换器
+    // Date converter
     @TypeConverter
     fun fromTimestamp(value: Long?): Date? {
         return value?.let { Date(it) }
@@ -21,7 +21,7 @@ class Converters {
         return date?.time
     }
 
-    // Mood转换器
+    // Mood converter
     @TypeConverter
     fun fromMoodString(value: String?): Mood? {
         return value?.let { 
@@ -38,7 +38,7 @@ class Converters {
         return mood?.name
     }
 
-    // ExerciseLevel转换器
+    // Exercise Level converter
     @TypeConverter
     fun fromExerciseLevelString(value: String?): ExerciseLevel? {
         return value?.let {

@@ -51,7 +51,7 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-storage")
     implementation("com.google.firebase:firebase-auth-ktx")
-    // 添加Firebase崩溃分析
+    // Add Firebase Crashlytics
     implementation("com.google.firebase:firebase-crashlytics")
     
     // Google Sign-In

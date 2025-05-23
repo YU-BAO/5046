@@ -66,7 +66,7 @@ class GoogleSignInActivity : ComponentActivity() {
                             CircularProgressIndicator()
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
-                                text = "使用Google账号登录中...",
+                                text = "Signing in with Google account...",
                                 style = MaterialTheme.typography.bodyLarge,
                                 textAlign = TextAlign.Center
                             )

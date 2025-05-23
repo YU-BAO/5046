@@ -13,79 +13,79 @@ import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
 /**
- * 身份验证管理器 - 处理Firebase Auth相关功能
+ * Authentication manager – handles Firebase Auth related functionality
  */
 class AuthManager {
     private val TAG = "AuthManager"
     
-    // Firebase Auth实例
+    // Firebase Auth instance
     private val auth: FirebaseAuth by lazy { Firebase.auth }
     
-    // 获取当前登录用户
+    // Get the currently logged-in user
     fun getCurrentUser(): FirebaseUser? = auth.currentUser
     
-    // 检查用户是否已登录
+    // Check whether a user is logged in
     fun isUserLoggedIn(): Boolean = auth.currentUser != null
     
     /**
-     * 使用邮箱和密码注册新用户
+     * Register a new user with email and password
      */
     suspend fun registerWithEmail(email: String, password: String): Result<FirebaseUser> = withContext(Dispatchers.IO) {
         try {
             val authResult = auth.createUserWithEmailAndPassword(email, password).await()
             authResult.user?.let {
                 Result.success(it)
-            } ?: Result.failure(Exception("用户创建失败"))
+            } ?: Result.failure(Exception("User creation failed"))
         } catch (e: Exception) {
-            Log.e(TAG, "注册失败: ${e.message}", e)
+            Log.e(TAG, "Registration failed: ${e.message}", e)
             Result.failure(e)
         }
     }
     
     /**
-     * 使用邮箱和密码登录
+     * Login with email and password
      */
     suspend fun loginWithEmail(email: String, password: String): Result<FirebaseUser> = withContext(Dispatchers.IO) {
         try {
             val authResult = auth.signInWithEmailAndPassword(email, password).await()
             authResult.user?.let {
                 Result.success(it)
-            } ?: Result.failure(Exception("登录失败"))
+            } ?: Result.failure(Exception("Login failed"))
         } catch (e: Exception) {
-            Log.e(TAG, "登录失败: ${e.message}", e)
+            Log.e(TAG, "Login failed: ${e.message}", e)
             Result.failure(e)
         }
     }
     
     /**
-     * 发送密码重置邮件
+     * Send password reset email
      */
     suspend fun sendPasswordResetEmail(email: String): Result<Unit> = withContext(Dispatchers.IO) {
         return@withContext try {
             auth.sendPasswordResetEmail(email).await()
             Result.success(Unit)
         } catch (e: Exception) {
-            Log.e(TAG, "发送密码重置邮件失败: ${e.message}", e)
+            Log.e(TAG, "Failed to send password reset email: ${e.message}", e)
             Result.failure(e)
         }
     }
     
     /**
-     * 退出登录
+     * Logout
      */
     fun signOut() {
         auth.signOut()
     }
     
     /**
-     * 删除当前用户账户
+     * Delete the current user account
      */
     suspend fun deleteAccount(): Result<Unit> = withContext(Dispatchers.IO) {
         return@withContext try {
             auth.currentUser?.delete()?.await()
             Result.success(Unit)
         } catch (e: Exception) {
-            Log.e(TAG, "删除账户失败: ${e.message}", e)
+            Log.e(TAG, "Failed to delete account: ${e.message}", e)
             Result.failure(e)
         }
     }

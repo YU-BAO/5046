@@ -4,11 +4,11 @@ import com.example.a5046a3.data.models.WellnessEntry
 import java.util.UUID
 
 /**
- * 数据转换扩展函数：用于Entity与Model之间的转换
+ * Data transformation extension functions: convert between Entity and domain model
  */
 
 /**
- * 将数据库实体转换为域模型
+ * Converts a database entity to a domain model
  */
 fun WellnessEntryEntity.toWellnessEntry(): WellnessEntry {
     return WellnessEntry(
@@ -23,7 +23,7 @@ fun WellnessEntryEntity.toWellnessEntry(): WellnessEntry {
 }
 
 /**
- * 将域模型转换为数据库实体
+ * Converts a domain model to a database entity
  */
 fun WellnessEntry.toEntity(): WellnessEntryEntity {
     return WellnessEntryEntity(

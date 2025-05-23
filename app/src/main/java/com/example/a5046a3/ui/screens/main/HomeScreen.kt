@@ -40,9 +40,9 @@ import androidx.compose.ui.platform.LocalContext
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavController) {
-    val context = LocalContext.current // ✅ 修复：提前获取 context
+    val context = LocalContext.current // ✅ Acquired context beforehand
     val formatter = DateTimeFormatter.ofPattern("EEEE, MMM d", Locale.ENGLISH)
-    val currentDate = LocalDate.now().format(formatter) // ✅ 修复：避免 remember 中使用无效返回值
+    val currentDate = LocalDate.now().format(formatter) // ✅ Fix: avoid using invalid return value inside remember
 
     val homeViewModel: HomeViewModel = viewModel()
     LaunchedEffect(Unit) {
@@ -308,7 +308,7 @@ fun HomeScreen(navController: NavController) {
                         val workRequest = OneTimeWorkRequestBuilder<DailyReminderWorker>()
                             .setInitialDelay(0, TimeUnit.SECONDS)
                             .build()
-                        WorkManager.getInstance(context).enqueue(workRequest) // ✅ 修复：避免在 onClick 中调用 LocalContext.current
+                        WorkManager.getInstance(context).enqueue(workRequest) // ✅ Fix: avoid calling LocalContext.current inside onClick
                     },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF009688))

@@ -11,7 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 /**
- * 通用卡片组件，用于显示健康记录
+ * Generic card component used to display wellness records
  */
 @Composable
 fun WellnessCardContent(

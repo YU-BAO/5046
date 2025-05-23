@@ -17,14 +17,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 /**
- * 主要按钮组件 - 提供统一的样式和加载状态
- * 
- * @param text 按钮文本
- * @param onClick 点击事件回调
- * @param modifier 自定义修饰符
- * @param isLoading 是否显示加载状态
- * @param enabled 按钮是否启用
- * @param leadingIcon 前置图标 (可选)
+ * Primary button component – provides a consistent style and an optional loading state.
+ *
+ * @param text Button label text
+ * @param onClick Callback invoked when the button is clicked
+ * @param modifier Modifier for styling and layout customisation
+ * @param isLoading Whether to display a loading indicator instead of the label
+ * @param enabled Whether the button is enabled
+ * @param leadingIcon Optional leading icon composable
  */
 @Composable
 fun PrimaryButton(

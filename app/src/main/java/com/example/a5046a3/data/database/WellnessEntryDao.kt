@@ -9,31 +9,31 @@ import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
 /**
- * 数据访问对象接口：定义对wellness记录的数据库操作
+ * Data Access Object interface: defines database operations for wellness records
  */
 @Dao
 interface WellnessEntryDao {
-    // 插入新记录
+    // Insert new record
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertEntry(entry: WellnessEntryEntity): Long
     
-    // 更新记录
+    // Update record
     @Update
     fun updateEntry(entry: WellnessEntryEntity): Int
     
-    // 删除记录
+    // Delete record
     @Delete
     fun deleteEntry(entry: WellnessEntryEntity): Int
     
-    // 根据用户ID获取所有记录
+    // Get all records by user ID
     @Query("SELECT * FROM wellness_entries WHERE userId = :userId ORDER BY date DESC")
     fun getEntriesByUser(userId: String): Flow<List<WellnessEntryEntity>>
     
-    // 根据ID获取单条记录
+    // Get single record by ID
     @Query("SELECT * FROM wellness_entries WHERE id = :id LIMIT 1")
     fun getEntryById(id: String): WellnessEntryEntity?
     
-    // 获取所有记录
+    // Get all records
     @Query("SELECT * FROM wellness_entries ORDER BY date DESC")
     fun getAllEntries(): Flow<List<WellnessEntryEntity>>
 } 

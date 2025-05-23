@@ -69,7 +69,7 @@ fun AccountScreen(navController: NavController) {
     var showDeleteConfirmation by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
 
-    // 获取当前用户信息
+    // Retrieve current user information
     val currentUser = authManager.getCurrentUser()
     val userProfile = remember {
         mutableStateOf(
@@ -81,7 +81,7 @@ fun AccountScreen(navController: NavController) {
                     photoUrl = currentUser.photoUrl?.toString()
                 )
             } else {
-                // 如果没有登录用户，则提供默认值
+                // Provide default values if no user is logged in
                 UserProfile(
                     id = "guest",
                     name = "Guest User",
@@ -92,7 +92,7 @@ fun AccountScreen(navController: NavController) {
         )
     }
 
-    // 如果用户未登录，返回登录页面
+    // Redirect to login screen if user is not logged in
     LaunchedEffect(Unit) {
         if (!StudentWellnessApp.userManager.isLoggedIn() && !authManager.isUserLoggedIn()) {
             Toast.makeText(context, "Please login to view your account", Toast.LENGTH_SHORT).show()
@@ -249,7 +249,7 @@ fun AccountScreen(navController: NavController) {
         }
     }
     
-    // 登出确认对话框
+    // Logout confirmation dialog
     if (showLogoutConfirmation) {
         AlertDialog(
             onDismissRequest = { showLogoutConfirmation = false },
@@ -260,10 +260,10 @@ fun AccountScreen(navController: NavController) {
                     onClick = {
                         showLogoutConfirmation = false
                         isLoading = true
-                        // 执行登出
+                        // Perform logout
                         authManager.signOut()
                         StudentWellnessApp.userManager.clearUserId()
-                        // 导航回登录页面
+                        // Navigate back to login screen
                         Toast.makeText(context, "Logged out successfully", Toast.LENGTH_SHORT).show()
                         navController.navigate(Screen.Login.route) {
                             popUpTo(Screen.Home.route) { inclusive = true }
@@ -281,7 +281,7 @@ fun AccountScreen(navController: NavController) {
         )
     }
     
-    // 删除账户确认对话框
+    // Delete account confirmation dialog
     if (showDeleteConfirmation) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirmation = false },
@@ -292,7 +292,7 @@ fun AccountScreen(navController: NavController) {
                     onClick = {
                         showDeleteConfirmation = false
                         isLoading = true
-                        // 删除账户
+                        // Delete account
                         coroutineScope.launch {
                             val result = authManager.deleteAccount()
                             result.fold(
